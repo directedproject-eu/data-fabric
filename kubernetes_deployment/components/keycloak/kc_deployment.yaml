@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      securityContext:
+        # Automatically convert mounts to user group
+        fsGroup: 1000
+      containers:
+      - name: keycloak
+        # FIXME version 26.1.3 not working with the requested features in args property
+        image: quay.io/keycloak/keycloak:25.0.6
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: 200m
+            memory: 672M
+          limits:
+            cpu: 500m
+            memory: 1024M
+        args:
+         - start
+         - --features=admin-fine-grained-authz,scripts,hostname:v1
+        env:
+        - name: KEYCLOAK_ADMIN
+          valueFrom:
+            secretKeyRef:
+              name: keycloak
+              key: keycloak_username
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak
+              key: keycloak_password
+        - name: KC_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: keycloak
+              key: keycloak_db_user
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak
+              key: keycloak_db_password
+        envFrom:
+        - configMapRef:
+            name: keycloak
+        ports:
+        - name: http
+          containerPort: 8080
+        # readinessProbe:
+        #   httpGet:
+        #     path: /realms/master
+        #     port: 8080
+        volumeMounts:
+        - name: storage
+          mountPath: /opt/keycloak/providers
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: keycloak-storage

@@ -1,0 +1,60 @@
+namespaceOverride: <my-namespace>
+
+config:
+  existingSecret: protected-api
+  # keys:
+  # - client-id
+  # - client-secret
+  # - cookie-secret
+  # Source: https://github.com/oauth2-proxy/manifests/blob/main/helm/oauth2-proxy/templates/deployment.yaml#L182-L198
+  configFile: |
+    email_domains=[ "example.com" ]
+    upstreams=[ "http://oauth2-proxy-api/" ]
+    http_address="0.0.0.0:80"
+    https_address="0.0.0.0:443"
+    proxy_prefix="/protected/oauth2"
+    cookie_domains=[ "<my-host>" ]
+    code_challenge_method="S256"
+    whitelist_domains=[ "<my-host>", "localhost:5173" ]
+    redirect_url="https://<my-host>/protected/oauth2/callback"
+    oidc_issuer_url="https://<my-host>/auth/realms/directed"
+    oidc_extra_audiences=[ "trails_local", "12340123401234012340123401234012" ]
+    skip_jwt_bearer_tokens="true"
+    provider="oidc"
+    scope="openid email"
+    provider_display_name="DIRECTED project"
+    silence_ping_logging="true"
+    ## mark paths as API routes to get HTTP Status code 401 instead of redirect to login page
+    # api_routes = [
+    #   "^/api"
+    # ]
+resources:
+  requests:
+    cpu: 10m
+    memory: 32M
+  limits:
+    cpu: 100m
+    memory: 128M
+serviceAccount:
+  enabled: false
+  name: default
+ingress:
+  enabled: true
+  path: /protected(/?)(.*)
+  pathType: ImplementationSpecific
+  hosts:
+  - <my-host>
+  tls:
+  - hosts:
+    - <my-host>
+    secretName: <my-tls-secret-name>
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /protected/$2
+    nginx.ingress.kubernetes.io/proxy-buffering: "on"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 512k
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: 512k
+    nginx.ingress.kubernetes.io/proxybuffers: 4 512k
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:5173"

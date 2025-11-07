@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: csa-tsdb
+  labels:
+    app: csa-tsdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csa-tsdb
+  serviceName: csa-tsdb
+  template:
+    metadata:
+      labels:
+        app: csa-tsdb
+    spec:
+      tolerations:
+      - key: "52north.org/directed-worker"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule"
+      - key: "52north.org/directed-worker"
+        value: "true"
+        operator: "Equal"
+        effect: "NoExecute"
+      containers:
+      - name: csa-tsdb
+        image: timescale/timescaledb-ha:pg16
+        imagePullPolicy: Always
+        env:
+        - name: TIMESCALEDB_TELEMETRY
+          value: "off"
+        - name: POSTGRES_DB
+          value: csa
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: csa-tsdb-user
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: csa-tsdb-user
+              key: password
+        - name: ALLOW_IP_RANGE
+          value: 0.0.0.0/0
+        - name: POSTGRES_MULTIPLE_EXTENSIONS
+          value: postgis
+        - # THIS MUST BE IN SYNC with the persistence layer aka volume mount!
+          name: PGDATA
+          value: /home/postgres/pgdata/data
+        resources:
+          requests:
+            memory: 168M
+            cpu: 10m
+          limits:
+            memory: 512M
+            cpu: 1000m
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: data
+          mountPath: /home/postgres/pgdata
+        - name: csa-tsdb-config
+          mountPath: /docker-entrypoint-initdb.d/99_max_connections_500.sql
+          subPath: 99_max_connections_500.sql
+          readOnly: true
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - exec pg_isready -U "$POSTGRES_USER" -h 127.0.0.1 -p 5432 --dbname="$POSTGRES_DB"
+          failureThreshold: 6
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+      restartPolicy: Always
+      volumes:
+      - name: csa-tsdb-config
+        configMap:
+          name: csa-tsdb-config
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 1Gi

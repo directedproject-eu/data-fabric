@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-pioneer-trails
+  labels:
+    app: open-pioneer-trails
+spec:
+  selector:
+    app: open-pioneer-trails
+  ports:
+  - name: "http"
+    port: 8080
+    targetPort: 8080

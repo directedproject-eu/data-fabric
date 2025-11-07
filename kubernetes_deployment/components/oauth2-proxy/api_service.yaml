@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy-api
+  labels:
+    app: oauth2-proxy-api
+spec:
+  selector:
+    app: oauth2-proxy-api
+  ports:
+  - name: "http"
+    port: 80
+    targetPort: 80

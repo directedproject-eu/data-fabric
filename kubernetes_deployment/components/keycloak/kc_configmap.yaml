@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak
+data:
+  # option is deprecated, hence replace following https://github.com/bitnami/charts/issues/26175
+  KC_PROXY: "edge"
+  KC_HOSTNAME: <my-host>
+  KC_HOSTNAME_PATH: auth
+  KC_HOSTNAME_ADMIN_URL: https://<my-host>/auth/
+  KC_DB: postgres
+  KC_DB_URL_HOST: keycloak-db
+  KC_DB_URL_PORT: "5432"
+  KC_DB_URL_DATABASE: keycloak-data
+  KC_DB_SCHEMA: public

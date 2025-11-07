@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-pioneer-trails
+  labels:
+    app: open-pioneer-trails
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: open-pioneer-trails
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: open-pioneer-trails
+    spec:
+      containers:
+      - name: open-pioneer-trails
+        image: 52north/directed-pioneer:latest
+        imagePullPolicy: Always
+        resources:
+         requests:
+           memory: 16M
+           cpu: 1m
+         limits:
+           memory: 64M
+           cpu: 100m
+        ports:
+        - containerPort: 8080
+      restartPolicy: Always
+      serviceAccountName: ""

@@ -1,0 +1,64 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: howis-ingest
+spec:
+  # every 5 minutes
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: "job-howis-ingestion"
+            image: 52north/directed-lhp-ingestor:latest
+            imagePullPolicy: Always
+            env:
+              - name: LOGURU_LEVEL
+                value: INFO
+              - name: HOWIS_CSA_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: howis-csa-user
+                    key: username
+              - name: HOWIS_CSA_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: howis-csa-user
+                    key: password
+              - name: HOWIS_FTP_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: howis-ftp-user
+                    key: username
+              - name: HOWIS_FTP_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: howis-ftp-user
+                    key: password
+            args:
+              - --override
+              # - --dry-run
+              - --internal-destination=http://csa-api.<my-namespace>.svc.cluster.local:5000
+              - --destination=https://<my-host>/csa
+              - --stage-dir=/srv/data/howis
+              - ftp.example.com
+            # command: ["/bin/sh"]
+            # args: ["-c", "sleep 600"]
+            # TODO: specify resources
+            # resources:
+            #   requests:
+            #     cpu: 500m
+            #     memory: 128M
+            #   limits:
+            #     cpu: 500m
+            #     memory: 128M
+            volumeMounts:
+              - name: data
+                mountPath: /srv/data/howis
+          restartPolicy: Never
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: csa-howis-ingestor-data

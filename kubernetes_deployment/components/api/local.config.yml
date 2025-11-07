@@ -1,0 +1,96 @@
+server:
+  bind:
+    host: 0.0.0.0
+    port: 80
+  cors: true
+  encoding: utf-8
+  gzip: false
+  language: en-US
+  limit: 10
+  manager:
+    connection: /tmp/pygeoapi-process-manager.db
+    name: TinyDB
+    output_dir: /tmp/
+  map:
+    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+  mimetype: application/json; charset=UTF-8
+  ogc_schemas_location: /schemas.opengis.net
+  pretty_print: true
+  url: https://<my-host>/api/
+logging:
+  level: DEBUG
+  logfile: /dev/stdout
+metadata:
+  contact:
+    address: Martin-Luther-King-Weg 24
+    city: Münster
+    country: Germany
+    email: info+data-fabric-repository@52north.org
+    hours: Mo-Fr 09:00-16:00 CE(S)T
+    instructions: During hours of service. Off on weekends.
+    name: 52°North Spatial Information Research GmbH
+    phone: +49-251-396371-0
+    position: Operator
+    postalcode: 48155
+    role: pointOfContact
+    stateorprovince: NRW
+    url: https://52north.org/about-us/contact-us/
+  identification:
+    description: pygeoapi provides an API to geospatial data
+    keywords:
+    - geospatial
+    - data
+    - api
+    - CLIMADA
+    - DIRECTED
+    keywords_type: theme
+    terms_of_service: https://creativecommons.org/licenses/by/4.0/
+    title: DIRECTED pygeoapi  - API instance
+    url: https://github.com/geopython/pygeoapi
+  license:
+    name: 'FIXME: TBD, maybe CC-BY 4.0 license'
+    url: https://creativecommons.org/licenses/by/4.0/
+  provider:
+    name: 52°North DIRECTED Team
+    url: https://52north.org/solutions/directed/
+resources:
+  climada-simple-example-denmark-process:
+    processor:
+      name: directed_pygeoapi_processes.climada.SimpleExampleDenmarkProcessor
+    type: process
+  denmark_municipalities:
+    type: collection
+    visibility: default
+    title: Denmark municipalities
+    description: Denmark municipalities
+    keywords:
+      - Denmark
+      - municipalities
+    extents:
+      spatial:
+        bbox: [ 11.7787, 55.5161, 12.3433, 56.0310 ]
+        crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+    providers:
+      - type: feature
+        name: GeoJSON
+        data: /pygeoapi/data/collections/denmark_municipalities.geojson
+        id_field: name
+  danube_administrative_boundaries:
+    type: collection
+    visibility: default
+    title: Danube region
+    description: Danube region
+    keywords:
+      - Zala
+      - Vienna
+      - NUTS 3
+    extents:
+      spatial:
+        bbox: [ 16.1839833570000451, 46.2913909240000407, 17.4190674360000344, 48.3218511530000683 ]
+        crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+    providers:
+      - type: feature
+        name: GeoJSON
+        data: /pygeoapi/data/collections/danube_administrative_boundaries.geojson
+        id_field: name

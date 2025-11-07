@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/cluster-issuer: letsencrypt-production
+  name: csa
+spec:
+  tls:
+  - hosts:
+    - <my-host>
+    secretName: <my-tls-secret-name>
+  rules:
+  - host: <my-host>
+    http:
+      paths:
+      - path: /csa(/?)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: csa-api
+            port:
+              number: 5000

@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: geoserver
+spec:
+  replicas: 1
+  updateStrategy:
+    type: OnDelete
+  selector:
+    matchLabels:
+      app: geoserver
+  serviceName: geoserver
+  template:
+    metadata:
+      labels:
+        app: geoserver
+    spec:
+      tolerations:
+      - key: "52north.org/directed-worker"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule"
+      - key: "52north.org/directed-worker"
+        value: "true"
+        operator: "Equal"
+        effect: "NoExecute"
+      containers:
+      - name: geoserver
+        image: docker.osgeo.org/geoserver:2.27.1
+        imagePullPolicy: "IfNotPresent"
+        stdin: true
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 2500M
+            # planned update
+            # cpu: 10
+            # memory: 1900M
+          limits:
+            cpu: 3000m
+            memory: 6G
+            # geoserver is started with -Xmx=4G (max heap size) and we need space for non-heap stuff
+            # planned update
+            # cpu: 1000m
+            # memory: 5G
+        env:
+          - name: CORS_ENABLED
+            value: "true"
+          - name: SKIP_DEMO_DATA
+            value: "true"
+          - name: INSTALL_EXTENSIONS
+            value: "true"
+          - name: STABLE_EXTENSIONS
+            value: netcdf,netcdf-out
+#            - name: COMMUNITY_PLUGIN_URL
+#              value: https://build.geoserver.org/geoserver/2.27.x/community-latest
+#            - name: COMMUNITY_EXTENSIONS
+#              value: cog-s3,s3-geotiff
+#           Note: if PROXY_BASE_URL is not set, the username/password fields are marked as insecure
+          - name: PROXY_BASE_URL
+            value: https://<my-host>/geoserver
+          - name: GEOSERVER_CSRF_WHITELIST
+            value: <my-host>
+          - name: EXTRA_JAVA_OPTS
+            value: "-Xms256m -Xmx4G"
+          - name: GEOSERVER_ADMIN_USER
+            valueFrom:
+              secretKeyRef:
+                name: geoserver-admin
+                key: username
+          - name: GEOSERVER_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: geoserver-admin
+                key: password
+        volumeMounts:
+          - name: storage
+            mountPath: /opt/geoserver_data
+            subPath: geoserver_data
+      #initContainers:
+      #  - name: init-geoserver-data-dir
+      #    image: docker.osgeo.org/geoserver:2.27.1
+      #    imagePullPolicy: "IfNotPresent"
+      #    command:
+      #      - sh
+      #      - "-c"
+      #      - |
+      #        /bin/bash <<'EOF'
+      #
+      #        if [ -e /tmp/global.xml ]
+      #        then
+      #          echo "Do not do anything because geoserver initial data is already present"
+      #        else
+      #          echo "Copy geoserver initial data"
+      #          cp -R /geoserver_data/data/* /tmp/
+      #        fi
+      #
+      #        EOF
+      #    volumeMounts:
+      #      - name: data
+      #        mountPath: /tmp
+      #        subPath: data
+      restartPolicy: Always
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 16Gi
+        # MUST STAY SSD, because network based storage kills geoserver performance
+        storageClassName: ssd

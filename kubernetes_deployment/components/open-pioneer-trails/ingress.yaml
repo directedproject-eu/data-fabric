@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # add an annotation indicating the issuer to use.
+    cert-manager.io/cluster-issuer: letsencrypt-production
+  name: open-pioneer-trails
+spec:
+  ingressClassName: "nginx"
+  tls:
+  - hosts:
+    - <my-host>
+    secretName: <my-tls-secret-name>
+  rules:
+  - host: <my-host>
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: open-pioneer-trails
+            port:
+              number: 8080

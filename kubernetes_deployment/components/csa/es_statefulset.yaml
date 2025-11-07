@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: csa-es
+  labels:
+    app: csa-es
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csa-es
+  serviceName: csa-es
+  template:
+    metadata:
+      labels:
+        app: csa-es
+      annotations:
+        # hints used by filebeat
+        # Docu: https://www.elastic.co/guide/en/beats/filebeat/current/configuration-autodiscover-hints.html#_co_elastic_logsmodule
+        co.elastic.logs/module: elasticsearch
+    spec:
+      tolerations:
+      - key: "52north.org/directed-worker"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule"
+      - key: "52north.org/directed-worker"
+        value: "true"
+        operator: "Equal"
+        effect: "NoExecute"
+      containers:
+      - name: csa-es
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
+        imagePullPolicy: Always
+        # Enable next two lines for debugging
+        # command: ["/bin/sh"]
+        # args: ["-c", "while true; do date; sleep 60;done"]
+        env:
+        - name: node.name
+          value: csa-es-0.csa-es.<my-namespace>.svc.cluster.local
+        - name: cluster.name
+          value: <my-namespace>-csa-es-cluster
+        - name: ELASTIC_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: csa-es-user
+              key: username
+        - name: ELASTIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: csa-es-user
+              key: password
+        - # https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-configuration-memory.html#bootstrap-memory_lock
+          name: bootstrap.memory_lock
+          value: "false"
+        - # https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html#single-node-discovery
+          name: discovery.type
+          value: single-node
+        - name: xpack.security.enabled
+          value: "true"
+        - name: xpack.security.http.ssl.enabled
+          value: "true"
+        - name: xpack.security.http.ssl.key
+          value: certs/csa-es-0/csa-es-0.key
+        - name: xpack.security.http.ssl.certificate
+          value: certs/csa-es-0/csa-es-0.crt
+        - name: xpack.security.http.ssl.certificate_authorities
+          value: certs/ca/ca.crt
+        - name: xpack.security.transport.ssl.enabled
+          value: "true"
+        - name: xpack.security.transport.ssl.key
+          value: certs/csa-es-0/csa-es-0.key
+        - name: xpack.security.transport.ssl.certificate
+          value: certs/csa-es-0/csa-es-0.crt
+        - name: xpack.security.transport.ssl.certificate_authorities
+          value: certs/ca/ca.crt
+        - name: xpack.security.transport.ssl.verification_mode
+          value: certificate
+        - name: xpack.license.self_generated.type
+          value: basic
+        # TODO: sync with resources below
+        - name: ES_JAVA_OPTS
+          value: -Xms256m -Xmx256m
+        # FIXME adjust the requested and limited resources ASAP
+        resources:
+          requests:
+            memory: "768M"
+            cpu: "10m"
+          limits:
+            memory: "1024M"
+            cpu: "1000m"
+        ports:
+        - containerPort: 9200
+        volumeMounts:
+        - name: data
+          mountPath: /usr/share/elasticsearch/data
+        - name: es-config
+          mountPath: /usr/share/elasticsearch/config/certs/ca/ca.crt
+          subPath: ca.crt
+          readOnly: true
+        - name: es-config
+          mountPath: /usr/share/elasticsearch/config/certs/ca/ca.key
+          subPath: ca.key
+          readOnly: true
+        - name: es-config
+          mountPath: /usr/share/elasticsearch/config/certs/csa-es-0/csa-es-0.crt
+          subPath: csa-es-0.crt
+          readOnly: true
+        - name: es-config
+          mountPath: /usr/share/elasticsearch/config/certs/csa-es-0/csa-es-0.key
+          subPath: csa-es-0.key
+          readOnly: true
+        - name: es-config
+          mountPath: /etc/sysctl.d/52-vm-max-map-count.conf
+          subPath: 52-vm-max-map-count.conf
+          readOnly: true
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'
+          failureThreshold: 6
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+      restartPolicy: Always
+      volumes:
+      - name: es-config
+        configMap:
+          name: csa-es-config
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: 1Gi

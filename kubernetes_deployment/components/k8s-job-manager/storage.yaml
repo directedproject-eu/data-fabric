@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rim2d-tmp
+spec:
+  resources:
+    requests:
+      storage: 50G
+  accessModes:
+    - ReadWriteMany

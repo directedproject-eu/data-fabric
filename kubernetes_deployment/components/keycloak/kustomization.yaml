@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: <my-namespace>
+
+resources:
+  - db_service.yaml
+  - db_statefulset.yaml
+  - kc_configmap.yaml
+  - kc_deployment.yaml
+  - kc_ingress.yaml
+  - kc_pvc.yaml
+  - kc_service.yaml

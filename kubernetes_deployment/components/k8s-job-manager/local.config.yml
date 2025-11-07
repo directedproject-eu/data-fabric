@@ -1,0 +1,631 @@
+server:
+  bind:
+    host: 0.0.0.0
+    port: 80
+  url: https://<my-host>/k8s-jobs/
+  mimetype: application/json; charset=UTF-8
+  encoding: utf-8
+  gzip: false
+  languages:
+    - en-US
+  cors: true
+  pretty_print: true
+  limits:
+    default_items: 50
+    max_items: 1000
+    max_distance_x: 25
+    max_distance_y: 25
+    max_distance_units: m
+    on_exceed: throttle
+  map:
+    url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+  manager:
+    name: pygeoapi_k8s_manager.KubernetesManager
+    logging:
+      botocore: INFO
+      kubernetes: INFO
+      pygeoapi.l10n: ERROR
+    finalizer_controller: true
+  admin: false # enable admin api
+logging:
+  level: DEBUG
+  logfile: /dev/stdout
+  logformat: '[%(asctime)s | %(name)s::%(module)s.py:%(lineno)d | %(process)d] %(levelname)s - %(message)s'
+metadata:
+  identification:
+    title:
+      en: pygeoapi k8s job manager instance
+    description:
+      en: pygeoapi provides an API to geospatial data
+    keywords:
+      en:
+      - geospatial
+      - ingestion
+      - api
+      - real-world-labs
+      - directed
+      - 52north
+      - rim2d
+    keywords_type: theme
+    terms_of_service: 'FIXME: https://directedproject.eu/about'
+    # might be useful to match server.url above!
+    url: https://<my-host>/k8s-jobs/
+  license:
+    name: 'FIXME: TBD, maybe CC-BY 4.0 license'
+    url: https://creativecommons.org/licenses/by/4.0/
+  provider:
+    name: 52°North DIRECTED Team
+    url: https://52north.org/solutions/directed/
+  contact:
+    name: 52°North Spatial Information Research GmbH
+    position: Operator
+    address: Martin-Luther-King-Weg 24
+    city: Münster
+    stateorprovince: NRW
+    postalcode: 48155
+    country: Germany
+    phone: +49-251-396371-0
+    email: info+data-fabric-repository@52north.org
+    url: https://52north.org/about-us/contact-us/
+    hours: Mo-Fr 09:00-16:00 CE(S)T
+    instructions: During hours of service.  Off on weekends.
+    role: pointOfContact
+resources:
+  rim2d-klotzsche:
+    type: process
+    processor:
+      name: pygeoapi_k8s_manager.process.GenericImageProcessor
+      metadata:
+        version: 0.1
+        id: rim2d-klotzsche
+        title:
+          en: "RIM2D - Klotzsche"
+        description:
+          en: "RIM2D - Klotzsche - State: 2025-08-11 CEST 11:53"
+        keywords:
+        - k8s
+        - k8s manager
+        - KubernetesManager
+        - rim2d
+        - Klotzsche
+        links:
+        - type: text/html
+          rel: about
+          title: Processor Code Repository
+          href: https://github.com/52North/pygeoapi_k8s-manager/tree/main/src/pygeoapi_k8s_manager/process/generic_image.py
+          hreflang: en-UK
+        - type: text/html
+          rel: about
+          title: RIM2D Website
+          href: https://www.rim2d.eu/
+          hreflang: de
+        inputs:
+          token:
+            title: secret token
+            description: identify yourself
+            schema:
+              type: string
+        outputs:
+          id:
+            title: ID
+            description: The ID of the process execution
+            schema:
+              type: string
+          value:
+            title: Value
+            description: outputs.value.description
+            schema:
+              type: string
+        example:
+          inputs:
+            token: token
+      default_image: <my-registry>/<my-image>:latest
+      image_pull_secrets: default-secret # MUST be activated, if using RIM2D image from with-in our cluster
+      env:
+      - name: PROCESS_INPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_INPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_INPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_INPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_INPUTS_BUCKET_PATH_PREFIX
+        value: k8s-job-manager/processes/rim2d/inputs/klotzsche/
+      - name: PROCESS_INPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/inputs/
+      - name: PROCESS_OUTPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_OUTPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_OUTPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_OUTPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_OUTPUTS_BUCKET_PATH_PREFIX
+        # adds <job-id> from env variable 'PYGEOAPI_JOB_ID' during runtime
+        value: k8s-job-manager/processes/rim2d/outputs/
+      - name: PROCESS_OUTPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/outputs/*
+      resources:
+        requests:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+        limits:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+      tolerations:
+      - key: "role"
+        value: "gpu-worker"
+        operator: "Equal"
+        effect: "NoSchedule"
+      storage:
+      - name: inputs
+        mount_path: /tmp/
+        persistent_volume_claim_name: rim2d-tmp
+  rim2d-denmark-coastal:
+    type: process
+    processor:
+      name: pygeoapi_k8s_manager.process.GenericImageProcessor
+      metadata:
+        version: 0.1
+        id: rim2d-denmark-coastal
+        title:
+          en: "RIM2D - Denmark - Coastal"
+        description:
+          en: "RIM2D - Denmark - Coastal - State: 2025-08-11 CEST 11:52"
+        keywords:
+        - k8s
+        - k8s manager
+        - KubernetesManager
+        - rim2d
+        - Denmark
+        - coastal
+        links:
+        - type: text/html
+          rel: about
+          title: Processor Code Repository
+          href: https://github.com/52North/pygeoapi_k8s-manager/tree/main/src/pygeoapi_k8s_manager/process/generic_image.py
+          hreflang: en-UK
+        - type: text/html
+          rel: about
+          title: RIM2D Website
+          href: https://www.rim2d.eu/
+          hreflang: de
+        inputs:
+          token:
+            title: secret token
+            description: identify yourself
+            schema:
+              type: string
+        outputs:
+          id:
+            title: ID
+            description: The ID of the process execution
+            schema:
+              type: string
+          value:
+            title: Value
+            description: outputs.value.description
+            schema:
+              type: string
+        example:
+          inputs:
+            token: token
+      default_image: <my-registry>/<my-image>:latest
+      image_pull_secrets: default-secret # MUST be activated, if using RIM2D image from with-in our cluster
+      env:
+      - name: PROCESS_INPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_INPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_INPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_INPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_INPUTS_BUCKET_PATH_PREFIX
+        value: k8s-job-manager/processes/rim2d/inputs/denmark_coastal/
+      - name: PROCESS_INPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/inputs/
+      - name: PROCESS_OUTPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_OUTPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_OUTPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_OUTPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_OUTPUTS_BUCKET_PATH_PREFIX
+        # adds <job-id> from env variable 'PYGEOAPI_JOB_ID' during runtime
+        value: k8s-job-manager/processes/rim2d/outputs/
+      - name: PROCESS_OUTPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/outputs/*
+      resources:
+        requests:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+        limits:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+      tolerations:
+      - key: "role"
+        value: "gpu-worker"
+        operator: "Equal"
+        effect: "NoSchedule"
+      storage:
+      - name: inputs
+        mount_path: /tmp/
+        persistent_volume_claim_name: rim2d-tmp
+  rim2d-denmark-pluvial:
+    type: process
+    processor:
+      name: pygeoapi_k8s_manager.process.GenericImageProcessor
+      metadata:
+        version: 0.1
+        id: rim2d-denmark-pluvial
+        title:
+          en: "RIM2D - Denmark - Pluvial"
+        description:
+          en: "RIM2D - Denmark - Pluvial - State: 2025-08-11 CEST 11:52"
+        keywords:
+        - k8s
+        - k8s manager
+        - KubernetesManager
+        - rim2d
+        - Denmark
+        - pluvial
+        links:
+        - type: text/html
+          rel: about
+          title: Processor Code Repository
+          href: https://github.com/52North/pygeoapi_k8s-manager/tree/main/src/pygeoapi_k8s_manager/process/generic_image.py
+          hreflang: en-UK
+        - type: text/html
+          rel: about
+          title: RIM2D Website
+          href: https://www.rim2d.eu/
+          hreflang: de
+        inputs:
+          token:
+            title: secret token
+            description: identify yourself
+            schema:
+              type: string
+        outputs:
+          id:
+            title: ID
+            description: The ID of the process execution
+            schema:
+              type: string
+          value:
+            title: Value
+            description: outputs.value.description
+            schema:
+              type: string
+        example:
+          inputs:
+            token: token
+      default_image: <my-registry>/<my-image>:latest
+      image_pull_secrets: default-secret # MUST be activated, if using RIM2D image from with-in our cluster
+      env:
+      - name: PROCESS_INPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_INPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_INPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_INPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_INPUTS_BUCKET_PATH_PREFIX
+        value: k8s-job-manager/processes/rim2d/inputs/denmark_pluvial/
+      - name: PROCESS_INPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/inputs/
+      - name: PROCESS_OUTPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_OUTPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_OUTPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_OUTPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_OUTPUTS_BUCKET_PATH_PREFIX
+        # adds <job-id> from env variable 'PYGEOAPI_JOB_ID' during runtime
+        value: k8s-job-manager/processes/rim2d/outputs/
+      - name: PROCESS_OUTPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/outputs/*
+      resources:
+        requests:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+        limits:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+      tolerations:
+      - key: "role"
+        value: "gpu-worker"
+        operator: "Equal"
+        effect: "NoSchedule"
+      storage:
+      - name: inputs
+        mount_path: /tmp/
+        persistent_volume_claim_name: rim2d-tmp
+  rim2d-rimini-coastal:
+    type: process
+    processor:
+      name: pygeoapi_k8s_manager.process.GenericImageProcessor
+      metadata:
+        version: 0.1
+        id: rim2d-rimini-coastal
+        title:
+          en: "RIM2D - Rimini - Coastal"
+        description:
+          en: "RIM2D - Rimini - Coastal - State: 2025-08-11 CEST 10:47"
+        keywords:
+        - k8s
+        - k8s manager
+        - KubernetesManager
+        - rim2d
+        - Rimini
+        - coastal
+        links:
+        - type: text/html
+          rel: about
+          title: Processor Code Repository
+          href: https://github.com/52North/pygeoapi_k8s-manager/tree/main/src/pygeoapi_k8s_manager/process/generic_image.py
+          hreflang: en-UK
+        - type: text/html
+          rel: about
+          title: RIM2D Website
+          href: https://www.rim2d.eu/
+          hreflang: de
+        inputs:
+          token:
+            title: secret token
+            description: identify yourself
+            schema:
+              type: string
+        outputs:
+          id:
+            title: ID
+            description: The ID of the process execution
+            schema:
+              type: string
+          value:
+            title: Value
+            description: outputs.value.description
+            schema:
+              type: string
+        example:
+          inputs:
+            token: token
+      default_image: <my-registry>/<my-image>:latest
+      image_pull_secrets: default-secret # MUST be activated, if using RIM2D image from with-in our cluster
+      env:
+      - name: PROCESS_INPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_INPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_INPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_INPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_INPUTS_BUCKET_PATH_PREFIX
+        value: k8s-job-manager/processes/rim2d/inputs/rimini_coastal/
+      - name: PROCESS_INPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/inputs/
+      - name: PROCESS_OUTPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_OUTPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_OUTPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_OUTPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_OUTPUTS_BUCKET_PATH_PREFIX
+        # adds <job-id> from env variable 'PYGEOAPI_JOB_ID' during runtime
+        value: k8s-job-manager/processes/rim2d/outputs/
+      - name: PROCESS_OUTPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/outputs/
+      resources:
+        requests:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+        limits:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+      tolerations:
+      - key: "role"
+        value: "gpu-worker"
+        operator: "Equal"
+        effect: "NoSchedule"
+      storage:
+      - name: inputs
+        mount_path: /tmp/
+        persistent_volume_claim_name: rim2d-tmp
+  rim2d-rimini-pluvial:
+    type: process
+    processor:
+      name: pygeoapi_k8s_manager.process.GenericImageProcessor
+      metadata:
+        version: 0.1
+        id: rim2d-rimini-pluvial
+        title:
+          en: "RIM2D - Rimini - Pluvial"
+        description:
+          en: "RIM2D - Rimini - Pluvial - State: 2025-08-07 CEST 15:33"
+        keywords:
+        - k8s
+        - k8s manager
+        - KubernetesManager
+        - rim2d
+        - Rimini
+        - pluvial
+        links:
+        - type: text/html
+          rel: about
+          title: Processor Code Repository
+          href: https://github.com/52North/pygeoapi_k8s-manager/tree/main/src/pygeoapi_k8s_manager/process/generic_image.py
+          hreflang: en-UK
+        - type: text/html
+          rel: about
+          title: RIM2D Website
+          href: https://www.rim2d.eu/
+          hreflang: de
+        inputs:
+          token:
+            title: secret token
+            description: identify yourself
+            schema:
+              type: string
+        outputs:
+          id:
+            title: ID
+            description: The ID of the process execution
+            schema:
+              type: string
+          value:
+            title: Value
+            description: outputs.value.description
+            schema:
+              type: string
+        example:
+          inputs:
+            token: token
+      default_image: <my-registry>/<my-image>:latest
+      image_pull_secrets: default-secret # MUST be activated, if using RIM2D image from with-in our cluster
+      env:
+      - name: PROCESS_INPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_INPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_INPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_INPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_INPUTS_BUCKET_PATH_PREFIX
+        value: k8s-job-manager/processes/rim2d/inputs/rimini_pluvial/
+      - name: PROCESS_INPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/inputs/
+      - name: PROCESS_OUTPUTS_BUCKET_ENDPOINT
+        value: https://obs.eu-de.otc.t-systems.com
+      - name: PROCESS_OUTPUTS_BUCKET_KEY
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: key
+      - name: PROCESS_OUTPUTS_BUCKET_SECRET
+        secret_name: k8s-job-manager-s3-credentials
+        secret_key: secret
+      - name: PROCESS_OUTPUTS_BUCKET_NAME
+        value: <my-bucket>
+      - name: PROCESS_OUTPUTS_BUCKET_PATH_PREFIX
+        # adds <process-id>/outputs/<job-id> from env variables during runtime
+        value: k8s-job-manager/processes/
+      - name: PROCESS_OUTPUTS_LOCAL_PATH_PREFIX
+        value: /tmp/outputs/
+      resources:
+        requests:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+        limits:
+          memory: 8G
+          cpu: 3000m
+          nvidia.com/gpu: "1"
+      tolerations:
+      - key: "role"
+        value: "gpu-worker"
+        operator: "Equal"
+        effect: "NoSchedule"
+      storage:
+      - name: inputs
+        mount_path: /tmp/
+        persistent_volume_claim_name: rim2d-tmp
+  climada-mca-roskilde:
+    type: process
+    processor:
+      name: pygeoapi_k8s_manager.process.GenericImageProcessor
+      metadata:
+        version: 0.1
+        id: climada-mca-roskilde
+        title:
+          en: "CLIMADA - MCA - Roskilde"
+        description:
+          en: "CLIMADA - MCA - Roskilde - State: 2025-08-13 CEST 12:59"
+        keywords:
+        - k8s
+        - k8s manager
+        - KubernetesManager
+        - CLIMADA
+        - Roskilde
+        - MCA
+        links:
+        - type: text/html
+          rel: about
+          title: Processor Code Repository
+          href: https://github.com/52North/pygeoapi_k8s-manager/tree/main/src/pygeoapi_k8s_manager/process/generic_image.py
+          hreflang: en-UK
+        - type: text/html
+          rel: about
+          title: CLIMADA Website
+          href: https://climada.ethz.ch/
+          hreflang: de
+        inputs:
+          token:
+            title: secret token
+            description: identify yourself
+            schema:
+              type: string
+          weights:
+            title: weights
+            description: weights
+            schema:
+              type: dict
+        outputs:
+          id:
+            title: ID
+            description: The ID of the process execution
+            schema:
+              type: string
+          value:
+            title: Value
+            description: outputs.value.description
+            schema:
+              type: string
+        example:
+          inputs:
+            token: token
+      default_image: 52north/directed-mca-process:latest
+      #image_pull_secrets: default-secret # MUST be activated, if using an image from within the cluster
+      resources:
+        requests:
+          memory: 512M
+          cpu: 250m
+        limits:
+          memory: 512M
+          cpu: 250m

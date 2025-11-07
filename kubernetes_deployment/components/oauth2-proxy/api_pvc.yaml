@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: oauth2-proxy-api-data
+spec:
+  resources:
+    requests:
+      storage: 128M
+  accessModes:
+  - ReadWriteMany

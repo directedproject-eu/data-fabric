@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy-api
+  labels:
+    app: oauth2-proxy-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oauth2-proxy-api
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy-api
+    spec:
+      containers:
+      - name: api
+        image: 52north/directed-api:latest
+        imagePullPolicy: Always
+        env:
+          # pyGeoAPI
+        - name: PYGEOAPI_CONFIG
+          value: "/pygeoapi/local.config.yml"
+          # gunicorn
+        - name: CONTAINER_NAME
+          value: "api"
+        - name: CONTAINER_PORT
+          value: "80"
+        - name: SCRIPT_NAME
+          value: "/protected/"
+        - name: WSGI_WORKERS
+          value: "4"
+        - name: WSGI_WORKER_TIMEOUT
+          value: "6000"
+        - name: WSGI_WORKER_CLASS
+          value: "gevent"
+        resources:
+         requests:
+           memory: 350M
+           cpu: 10m
+         limits:
+           memory: 450M
+           cpu: 250m
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: api-config-volume
+          mountPath: /pygeoapi/local.config.yml
+          subPath: local.config.yml
+        - name: pygeoapi-data
+          mountPath: /pygeoapi/data/collections
+      volumes:
+      - name: api-config-volume
+        configMap:
+          name: oauth2-proxy-api-config
+      - name: pygeoapi-data
+        persistentVolumeClaim:
+          claimName: oauth2-proxy-api-data
+      restartPolicy: Always
+      serviceAccountName: ""

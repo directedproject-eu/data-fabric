@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: <my-namespace>
+
+resources:
+  - api/
+  - csa/
+  - dmi_data/
+  - geoserver/
+  - k8s-job-manager/
+  - keycloak/
+  - oauth2-proxy/
+  - open-pioneer-trails/

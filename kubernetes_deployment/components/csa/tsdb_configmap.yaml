@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: csa-tsdb-config
+data:
+  99_max_connections_500.sql: |
+    ALTER SYSTEM SET max_connections = 500;

@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: csa-api
+  labels:
+    app: csa-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csa-api
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: csa-api
+    spec:
+      tolerations:
+      - key: "52north.org/directed-worker"
+        value: "true"
+        operator: "Equal"
+        effect: "NoSchedule"
+      - key: "52north.org/directed-worker"
+        value: "true"
+        operator: "Equal"
+        effect: "NoExecute"
+      initContainers:
+      - name: data-downloader
+        image: alpine/curl:latest
+        imagePullPolicy: IfNotPresent
+        args:
+        - -L
+        - https://example.com/data/pegelgebiete_rhein-erft-kreis.reproj.geojson
+        - --output
+        - /srv/data/pegelgebiete_rhein-erft-kreis.reproj.geojson
+        volumeMounts:
+        - name: api-storage
+          mountPath: /srv/data/
+      containers:
+      - name: csa-api
+        image: 52north/directed-csa:latest
+        imagePullPolicy: Always
+        env:
+        # TimescaleDB
+        - name: CONFIG_PREFIX
+          value: DIRECTED-CSA_
+        - name: DIRECTED-CSA_DYNAMIC-RESOURCES_CSA-PART1_PROVIDER_CA__CERTS
+          value: /app/connected-systems-api/certs/es-ca.crt
+        # Timescale DB
+        - name: DIRECTED-CSA_DYNAMIC-RESOURCES_CSA-PART2_PROVIDER_TIMESCALE_USER
+          valueFrom:
+            secretKeyRef:
+              name: csa-tsdb-user
+              key: username
+        - name: DIRECTED-CSA_DYNAMIC-RESOURCES_CSA-PART2_PROVIDER_TIMESCALE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: csa-tsdb-user
+              key: password
+        # Elastic search
+        - name: DIRECTED-CSA_DYNAMIC-RESOURCES_CSA-PART1_PROVIDER_USER
+          valueFrom:
+            secretKeyRef:
+              name: csa-es-user
+              key: username
+        - name: DIRECTED-CSA_DYNAMIC-RESOURCES_CSA-PART1_PROVIDER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: csa-es-user
+              key: password
+        # Elastic search
+        - name: DIRECTED-CSA_DYNAMIC-RESOURCES_CSA-PART2_PROVIDER_ELASTIC_USER
+          valueFrom:
+            secretKeyRef:
+              name: csa-es-user
+              key: username
+        - name: DIRECTED-CSA_DYNAMIC-RESOURCES_CSA-PART2_PROVIDER_ELASTIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: csa-es-user
+              key: password
+        - name: QUART_AUTH_BASIC_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: howis-csa-user
+              key: username
+        - name: QUART_AUTH_BASIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: howis-csa-user
+              key: password
+        # command: ["/bin/sh"]
+        # args: ["-c", "while true; do echo hello \"$(date)\"; sleep 10;done"]
+        # FIXME adjust the requested and limited resources ASAP
+        resources:
+         requests:
+           memory: 512M
+           cpu: 10m
+         limits:
+           memory: 768M
+           cpu: 250m
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: api-config
+          mountPath: /app/connected-systems-api/default-config.yml
+          subPath: default-config.yml
+          readOnly: true
+        - name: api-config
+          mountPath: /app/hypercorn.conf.py
+          subPath: hypercorn.conf.py
+          readOnly: true
+        - name: api-storage
+          mountPath: /srv/data/
+        - name: es-config
+          mountPath: /app/connected-systems-api/certs/es-ca.crt
+          subPath: ca.crt
+          readOnly: true
+      volumes:
+      - name: api-config
+        configMap:
+          name: csa-api-config
+      - name: api-storage
+        persistentVolumeClaim:
+          claimName: csa-api-storage
+      - name: es-config
+        configMap:
+          name: csa-es-config
+      restartPolicy: Always
+      serviceAccountName: ""

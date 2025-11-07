@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: csa-api-config
+data:
+  default-config.yml: |
+    server:
+      bind:
+        host: 0.0.0.0
+        port: 5000
+      url: https://<my-host>/csa/
+      mimetype: application/json; charset=UTF-8
+      encoding: utf-8
+      gzip: false
+      languages:
+        - en-US
+      pretty_print: false
+      connected_systems: true
+      limit: 10
+      templates:
+        path: /
+      map:
+        url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+        attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+
+    logging:
+      level: ERROR
+
+    metadata:
+      identification:
+        title:
+          en: connected-systems-pygeoapi
+        description:
+          en: OGC Connected-Systems API backed by elasticsearch
+        keywords:
+          en:
+            - geospatial
+            - data
+            - api
+        keywords_type: theme
+        terms_of_service: 'FIXME: TBD, maybe CC-BY 4.0 license'
+        url: https://<my-host>/csa/
+      license:
+        name: CC-BY 4.0 license
+        url: https://creativecommons.org/licenses/by/4.0/
+      provider:
+        name: 52°North Spatial Information Research GmbH
+        url: https://52north.org
+      contact:
+        name: 52°North Spatial Information Research GmbH
+        position: Software Solutions Architect
+        address: Martin-Luther-King-Weg 24
+        city: Münster
+        stateorprovince: NRW
+        postalcode: 48155
+        country: Germany
+        phone: +49-251-396371-0
+        email: info+data-fabric-repository@52north.org
+        url: https://52north.org/about-us/contact-us/
+        hours: Mo-Fr 09:00-16:00 CE(S)T
+        instructions: During hours of service. Off on weekends.
+        role: pointOfContact
+    resources:
+      ev_einzugsgebiete:
+        type: collection
+        title: Catchments EV NW
+        description: Pegeleinzugsgebiete des Rhein-Erft-Kreises NW
+        keywords:
+          - Germany
+          - NW
+          - Rhein-Erft
+          - Pegeleinzugsgebiet
+        extents:
+          spatial:
+              bbox: [6.342671, 50.468431, 7.105001, 51.190349]
+              crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+        providers:
+          # https://docs.pygeoapi.io/en/latest/data-publishing/ogcapi-features.html#geojson
+        - type: feature
+          name: GeoJSON
+          data: /srv/data/pegelgebiete_rhein-erft-kreis.reproj.geojson
+          id_field: id
+          # id_field: PEGEL_EZG
+
+    dynamic-resources:
+      csa-part1:
+        type: connected-systems-part1
+        title: "elasticsearch-csa-adapter"
+        description: "Adapter to Elasticsearch CSA-Part1 Backend"
+        strict_validation: True
+        keywords: [ ]
+        provider:
+          type: elastic-csa-adapter
+          name: ElasticSearchConnectedSystems
+          host: csa-es-0.csa-es
+          port: 9200
+          dbname: csa
+          verify_certs: False
+
+      csa-part2:
+        type: connected-systems-part2
+        title: "timescale-csa-adapter"
+        description: "Adapter to TimescaleDB CSA-Part2 Backend"
+        keywords: [ ]
+        provider:
+          type: timescale-csa-adapter
+          name: TimescaleDBConnectedSystems
+          timescale:
+            host: csa-tsdb-0.csa-tsdb
+            port: 5432
+            dbname: csa
+          elastic: 
+            type: elastic-csa-adapter
+            name: ElasticSearchConnectedSystems
+            host: csa-es-0.csa-es
+            port: 9200
+            dbname: csa
+            verify_certs: False
+
+  hypercorn.conf.py: |
+    #
+    # conf provided via configmap
+    #
+    bind = '0.0.0.0:5000'
+    backlog = 2048
+    #
+    workers = 4
+    worker_class = 'uvloop'
+    worker_connections = 1000
+    timeout = 30
+    keepalive = 2

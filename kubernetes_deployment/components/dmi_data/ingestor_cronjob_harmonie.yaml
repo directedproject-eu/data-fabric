@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dmi-ingest-harmonie
+spec:
+  # every day at midnight
+  # -> might be good to increase to four times
+  #    a day according to the Storm Surge Model
+  schedule: "15 0 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: "job-dmi-ingestion-harmonie"
+            image: 52north/directed-dmi-ingestor:latest
+            imagePullPolicy: Always
+            env:
+            - name: LOGURU_LEVEL
+              value: INFO
+            - name: DMI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dmi-user
+                  key: key
+            - name: BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: name
+            - name: BUCKET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: key
+            - name: BUCKET_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: secret
+            - name: COLLECTION
+              value: "harmonie_dini_sf"
+            - name: BBOX
+              value: "1180,150,1300,280"
+            - name: PARAMETERS
+              value: "total-precipitation,rain-precipitation-rate"
+            # command: ["/bin/sh"]
+            # args: ["-c", "sleep 600"]
+            resources:
+              requests:
+                memory: 300M
+                cpu: 100m
+              limits:
+                memory: 300M
+                cpu: 100m
+          restartPolicy: Never

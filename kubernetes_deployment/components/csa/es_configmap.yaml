@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: csa-es-config
+data:
+  52-vm-max-map-count.conf: |
+    vm.max_map_count=262144
+  ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    [...]
+    -----END CERTIFICATE-----
+  ca.key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    [...]
+    -----END RSA PRIVATE KEY-----
+  csa-es-0.crt: |
+    -----BEGIN CERTIFICATE-----
+    [...]
+    -----END CERTIFICATE-----
+  csa-es-0.key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    [...]
+    -----END RSA PRIVATE KEY-----

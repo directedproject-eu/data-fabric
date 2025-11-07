@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    app: api
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: 52north/directed-api:latest
+        imagePullPolicy: Always
+        env:
+          # pygeoapi
+        - name: PYGEOAPI_CONFIG
+          value: "/pygeoapi/local.config.yml"
+          # gunicorn
+        - name: CONTAINER_NAME
+          value: "api"
+        - name: CONTAINER_PORT
+          value: "80"
+        - name: SCRIPT_NAME
+          value: "/api/"
+        - name: WSGI_WORKERS
+          value: "4"
+        - name: WSGI_WORKER_TIMEOUT
+          value: "6000"
+        - name: WSGI_WORKER_CLASS
+          value: "gevent"
+        resources:
+         requests:
+           memory: 1000M
+           cpu: 250m
+         limits:
+           memory: 1500M
+           cpu: 500m
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: api-config-volume
+          mountPath: /pygeoapi/local.config.yml
+          subPath: local.config.yml
+        - name: pygeoapi-data
+          mountPath: /pygeoapi/data/collections
+      volumes:
+      - name: api-config-volume
+        configMap:
+          name: api-config
+      - name: pygeoapi-data
+        persistentVolumeClaim:
+          claimName: api-data
+      restartPolicy: Always
+      serviceAccountName: ""
