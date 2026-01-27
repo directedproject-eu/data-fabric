@@ -1,4 +1,14 @@
-# CSA Installation for DIRECTED project
+# 🚧🚧🚧 ARCHIVED CSA Installation for DIRECTED project 🚧🚧🚧
+
+```plain
+🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
+🚧                                                                         🚧
+🚧                                                                         🚧
+🚧    THIS COMPONENT IS ALREADY ARCHIVED, PLEASE DO NOT RE-ADD OR APPLY    🚧
+🚧                                                                         🚧
+🚧                                                                         🚧
+🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧🚧
+```
 
 The installation of the Connected Systems API (CSA) consists of the following components:
 
@@ -41,7 +51,7 @@ password=your-secret-password-here
 
 Remove the last two parameters (`--dry-run`, `--output=yaml`) to really create the secrets.
 
-**Verfiy** the secrets creation:
+**Verify** the secrets creation:
 
 ```shell
 kubectl -n <my-namespace> get secrets csa-tsdb-user --template='{{ index .data.username }}' | base64 -d ;\

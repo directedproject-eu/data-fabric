@@ -5,9 +5,10 @@ namespace: <my-namespace>
 
 resources:
   - api/
-  - csa/
+#  - csa/  # disabled because it's archived on 20.01.2026
   - dmi_data/
   - geoserver/
+  - geosphere_data/
   - k8s-job-manager/
   - keycloak/
   - oauth2-proxy/

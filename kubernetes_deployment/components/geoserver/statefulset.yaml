@@ -109,6 +109,6 @@ spec:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 16Gi
+            storage: 75Gi
         # MUST STAY SSD, because network based storage kills geoserver performance
         storageClassName: ssd
