@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: rim2d-tmp
 spec:
+  storageClassName: csi-nas
   resources:
     requests:
       storage: 50G

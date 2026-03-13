@@ -50,6 +50,7 @@ spec:
     - metadata:
         name: keycloak-db-data
       spec:
+        storageClassName: csi-nas
         resources:
           requests:
             storage: 1Gi

@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: keycloak-storage
 spec:
+  storageClassName: csi-nas
   resources:
     requests:
       storage: 256Mi
