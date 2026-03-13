@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: forestry-data-ingest
+spec:
+  # every day at 23:45
+  schedule: "45 23 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: "job-forestry-data-ingestion"
+            image: 52north/directed-forestry-data-ingestor:latest
+            imagePullPolicy: Always
+            env:
+            - name: LOGURU_LEVEL
+              value: INFO
+            - name: BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: name
+            - name: BUCKET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: key
+            - name: BUCKET_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bucket
+                  key: secret
+            # command: ["/bin/sh"]
+            # args: ["-c", "sleep 600"]
+            resources:
+              requests:
+                memory: 450M
+                cpu: 200m
+              limits:
+                memory: 450M
+                cpu: 200m
+          restartPolicy: Never
