@@ -1,13 +1,13 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  annotations:
-    # add an annotation indicating the issuer to use.
-    cert-manager.io/cluster-issuer: letsencrypt-production
-    nginx.ingress.kubernetes.io/proxy-body-size: "0"
   name: geoserver
+  namespace: <my-namespace>
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
-  ingressClassName: "nginx"
+  ingressClassName: traefik
   tls:
   - hosts:
     - <my-host>
@@ -19,7 +19,7 @@ spec:
       - path: /geoserver/
         pathType: Prefix
         backend:
-         service:
-           name: geoserver
-           port:
-             number: 8080
+          service:
+            name: geoserver
+            port:
+              number: 8080

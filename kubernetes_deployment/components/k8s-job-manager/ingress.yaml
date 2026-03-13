@@ -1,34 +1,41 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
 metadata:
-  annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /k8s-jobs/$2
-    #
-    # https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/#custom-timeouts
-    #
-    # default read timeout is 60s
-    # https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "180"
-    #
-    #
-    # add an annotation indicating the issuer to use.
-    cert-manager.io/cluster-issuer: letsencrypt-production
-  name: k8s-job-manager
+  name: job-manager-transport
+  namespace: <my-namespace>
 spec:
-  ingressClassName: "nginx"
+  forwardingTimeouts:
+    responseHeaderTimeout: 180s
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: job-manager-rewrite
+  namespace: <my-namespace>
+spec:
+  replacePathRegex:
+    regex: "^/k8s-jobs(/?)(.*)"
+    replacement: "/k8s-jobs/$2"
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: k8s-job-manager
+  namespace: <my-namespace>
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`<my-host>`) && PathPrefix(`/k8s-jobs`)
+    kind: Rule
+    services:
+    - name: k8s-job-manager
+      port: 80
+      serversTransport: job-manager-transport
+    middlewares:
+    # - name: <traefik-ip-whitelist>
+    - name: job-manager-rewrite
   tls:
-  - hosts:
-    - <my-host>
     secretName: <my-tls-secret-name>
-  rules:
-  - host: <my-host>
-    http:
-      paths:
-      - path: /k8s-jobs(/?)(.*)
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: k8s-job-manager
-            port:
-              number: 80

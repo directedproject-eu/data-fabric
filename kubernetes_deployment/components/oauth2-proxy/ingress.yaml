@@ -1,0 +1,66 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: protected-api-cors
+  namespace: <my-namespace>
+spec:
+  headers:
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - OPTIONS
+    accessControlAllowOriginList:
+      - http://localhost:5173
+    accessControlMaxAge: 100
+    addVaryHeader: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: protected-api-rewrite
+  namespace: <my-namespace>
+spec:
+  replacePathRegex:
+    regex: "^/protected(/?)(.*)"
+    replacement: "/protected/$2"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: protected-api-whitelist
+  namespace: <my-namespace>
+spec:
+  ipAllowList:
+    sourceRange:
+      - <my-ip>
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: protected-api-oauth2-proxy
+  namespace: <my-namespace>
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: >-
+      <my-namespace>-protected-api-cors@kubernetescrd,
+      <my-namespace>-protected-api-rewrite@kubernetescrd,
+      <traefik-ip-whitelist>@kubernetescrd,
+      <my-namespace>-protected-api-whitelist@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - <my-host>
+    secretName: <my-tls-secret-name>
+  rules:
+  - host: <my-host>
+    http:
+      paths:
+      - path: /protected
+        pathType: Prefix
+        backend:
+          service:
+            name: protected-api-oauth2-proxy
+            port:
+              number: 80

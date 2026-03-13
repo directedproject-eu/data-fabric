@@ -1,11 +1,22 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: csa-api-strip-prefix
+  namespace: <my-namespace>
+spec:
+  stripPrefix:
+    prefixes:
+      - /csa
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    cert-manager.io/cluster-issuer: letsencrypt-production
   name: csa
+  namespace: <my-namespace>
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: <traefik-ip-whitelist>@kubernetescrd,<my-namespace>-csa-api-strip-prefix@kubernetescrd
 spec:
   tls:
   - hosts:
@@ -15,8 +26,8 @@ spec:
   - host: <my-host>
     http:
       paths:
-      - path: /csa(/?)(.*)
-        pathType: ImplementationSpecific
+      - path: /csa
+        pathType: Prefix
         backend:
           service:
             name: csa-api

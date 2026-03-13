@@ -1,17 +1,13 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: open-pioneer-trails
+  name: http-to-https-redirect
   namespace: <my-namespace>
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-production
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect-http-to-https@kubernetescrd
 spec:
   ingressClassName: traefik
-  tls:
-  - hosts:
-    - <my-host>
-    secretName: <my-tls-secret-name>
   rules:
   - host: <my-host>
     http:

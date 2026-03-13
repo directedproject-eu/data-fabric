@@ -4,18 +4,8 @@ kind: Kustomization
 namespace: <my-namespace>
 
 resources:
+  - api_configmap.yaml
   - api_deployment.yaml
   - api_pvc.yaml
   - api_service.yaml
-
-generatorOptions:
-  disableNameSuffixHash: true
-  labels:
-    type: generated
-  annotations:
-    note: generated
-
-configMapGenerator:
-- name: oauth2-proxy-api-config
-  files:
-  - local.config.yml
+  - ingress.yaml

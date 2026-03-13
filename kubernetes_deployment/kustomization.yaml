@@ -5,4 +5,5 @@ namespace: <my-namespace>
 
 resources:
   - components/
+  - http-to-https-redirect-ingress.yaml
   - namespace.yaml

@@ -39,22 +39,5 @@ serviceAccount:
   enabled: false
   name: default
 ingress:
-  enabled: true
-  path: /protected(/?)(.*)
-  pathType: ImplementationSpecific
-  hosts:
-  - <my-host>
-  tls:
-  - hosts:
-    - <my-host>
-    secretName: <my-tls-secret-name>
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-production
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /protected/$2
-    nginx.ingress.kubernetes.io/proxy-buffering: "on"
-    nginx.ingress.kubernetes.io/proxy-buffer-size: 512k
-    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: 512k
-    nginx.ingress.kubernetes.io/proxybuffers: 4 512k
-    nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "http://localhost:5173"
+  enabled: false
+
