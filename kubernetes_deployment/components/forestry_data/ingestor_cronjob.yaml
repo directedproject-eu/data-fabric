@@ -3,8 +3,8 @@ kind: CronJob
 metadata:
   name: forestry-data-ingest
 spec:
-  # every day at 23:45
-  schedule: "45 23 * * *"
+  # every day at 05:00
+  schedule: "00 5 * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
