@@ -5,8 +5,15 @@ server:
   cors: true
   encoding: utf-8
   gzip: false
-  language: en-US
-  limit: 10
+  language:
+    - en-US
+  limits:
+    default_items: 50
+    max_items: 1000
+    # max_distance_x: 25
+    # max_distance_y: 25
+    # max_distance_units: m
+    on_exceed: throttle
   manager:
     connection: /tmp/pygeoapi-process-manager.db
     name: TinyDB
@@ -18,6 +25,7 @@ server:
   ogc_schemas_location: /schemas.opengis.net
   pretty_print: true
   url: https://<my-host>/api/
+  admin: false
 logging:
   level: DEBUG
   logfile: /dev/stdout
@@ -55,10 +63,6 @@ metadata:
     name: 52°North DIRECTED Team
     url: https://52north.org/solutions/directed/
 resources:
-  climada-simple-example-denmark-process:
-    processor:
-      name: directed_pygeoapi_processes.climada.SimpleExampleDenmarkProcessor
-    type: process
   denmark_municipalities:
     type: collection
     visibility: default
@@ -94,3 +98,26 @@ resources:
         name: GeoJSON
         data: /pygeoapi/data/collections/danube_administrative_boundaries.geojson
         id_field: name
+  danube_basin_territorial_units:
+    type: collection
+    visibility: default
+    title: Danube basin NUTS 2 regions
+    description: Danube basin NUTS 2 regions
+    keywords:
+      - Danube basin
+      - NUTS 2
+    links:
+      - type: text/html
+        rel: canonical
+        title: information
+        href: https://ec.europa.eu/eurostat/web/gisco/geodata/statistical-units/territorial-units-statistics
+        hreflang: en
+    extents:
+      spatial:
+        bbox: [ 7.512320725000052, 40.85468288200008, 29.701656382000067, 51.02297213200006 ]
+        crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+    providers:
+      - type: feature
+        name: GeoJSON
+        data: /pygeoapi/data/collections/danube_basin_territorial_units.geojson
+        id_field: id

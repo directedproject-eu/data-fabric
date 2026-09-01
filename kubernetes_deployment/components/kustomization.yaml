@@ -13,3 +13,4 @@ resources:
   - keycloak/
   - oauth2-proxy/
   - open-pioneer-trails/
+  - secure_geoserver/

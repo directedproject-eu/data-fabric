@@ -3,7 +3,7 @@
 Start with official base image:
 
 ```shell
-docker pull docker.osgeo.org/geoserver:2.27.1
+docker pull docker.osgeo.org/geoserver:2.27.6
 ```
 
 ## Required k8s Resources
@@ -17,7 +17,7 @@ docker pull docker.osgeo.org/geoserver:2.27.1
 * Variables for community extensions:
 
   * `COMMUNITY_EXTENSIONS`: `cog-s3,s3-geotiff`
-  * `COMMUNITY_PLUGIN_URL`, default: <https://build.geoserver.org/geoserver/2.25.x/community-latest>
+  * `COMMUNITY_PLUGIN_URL`, default: <https://build.geoserver.org/geoserver/2.27.x/community-latest>
 
 ## Create GeoServer Admin Credentials as k8s Secrets
 
@@ -27,7 +27,7 @@ docker pull docker.osgeo.org/geoserver:2.27.1
 username=admin
 password=your-secret-password-here
 ```
-[README.md](README.md)
+
 **Create** the secret:
 
 ```shell
@@ -57,12 +57,12 @@ With secrets:
 ```shell
 [.components/geoserver]$ kubectl delete -k . \
 && kubectl delete secrets geoserver-admin \
-&& kubectl delete pvc geoserver-storage-0
+&& kubectl delete pvc storage-geoserver-0
 ```
 
 Without secrets:
 
 ```shell
 [.components/geoserver]$ kubectl delete -k . \
-&& kubectl delete pvc geoserver-storage-0
+&& kubectl delete pvc storage-geoserver-0
 ```

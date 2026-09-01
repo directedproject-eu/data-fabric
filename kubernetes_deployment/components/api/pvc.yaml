@@ -3,9 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: api-data
 spec:
-  storageClassName: csi-nas
+  storageClassName: ssd
   resources:
     requests:
       storage: 1G
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce

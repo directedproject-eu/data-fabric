@@ -3,9 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: rim2d-tmp
 spec:
-  storageClassName: csi-nas
+  storageClassName: ssd
   resources:
     requests:
       storage: 50G
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce

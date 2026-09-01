@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: 52north/directed-api:latest
+        image: geopython/pygeoapi:0.24.0
         imagePullPolicy: Always
         env:
           # pygeoapi

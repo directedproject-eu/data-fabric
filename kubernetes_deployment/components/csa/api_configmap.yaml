@@ -109,7 +109,7 @@ data:
             host: csa-tsdb-0.csa-tsdb
             port: 5432
             dbname: csa
-          elastic: 
+          elastic:
             type: elastic-csa-adapter
             name: ElasticSearchConnectedSystems
             host: csa-es-0.csa-es

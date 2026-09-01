@@ -1,10 +1,9 @@
 # k8s Namespace → Component → OAuth2 Proxy
 
 We are using oauth2 to protect our applications.
-This component is for testing oauth2-proxy for this.
-In the end, the components should contain this application with an application specific application.
+In the end, the components should contains this application with an application specific application.
 
-The test set-up contains three applications:
+The set-up contains three applications:
 
 * [keycloak][kc_k8s] - to authenticate and more - 🛠️ (see [its own component][kc_comp])
 * [oauth-proxy2][oap_helm] - to protect and serve - ⛑️
@@ -79,13 +78,13 @@ echo "Cookie Secret : '$(kubectl -n <my-namespace> get secrets protected-api --t
 1. List latest version available:
 
    ```shell
-   helm search repo oauth2-proxy --versions | head -n5
+   helm search repo oauth2-proxy --versions --version '>10.7.0'
    ```
 
 1. Save (possible) config values:
 
    ```shell
-   helm show values oauth2-proxy/oauth2-proxy --version 7.12.6 > values-reference.yaml
+   helm show values oauth2-proxy/oauth2-proxy --version 10.7.0 > values-reference.yaml
    ```
 
 1. Create deployment specific config values in `values.yaml`.
@@ -93,7 +92,7 @@ echo "Cookie Secret : '$(kubectl -n <my-namespace> get secrets protected-api --t
 1. Install chart using our adjusted values:
 
    ```shell
-   helm install -f values.yaml --namespace <my-namespace> --version 7.12.6 protected-api oauth2-proxy/oauth2-proxy
+   helm install -f values.yaml --namespace <my-namespace> --version 10.7.0 protected-api oauth2-proxy/oauth2-proxy
    ```
 
    Watch the installation status with the following command:
@@ -107,7 +106,13 @@ echo "Cookie Secret : '$(kubectl -n <my-namespace> get secrets protected-api --t
 Update with new values:
 
 ```shell
-helm upgrade --values values.yaml protected-api oauth2-proxy/oauth2-proxy --version 7.12.6
+helm upgrade --values values.yaml protected-api oauth2-proxy/oauth2-proxy --version 10.7.0
+```
+
+Upgrade to new version after checking for available versions and compare new reference-values:
+
+```shell
+helm upgrade protected-api oauth2-proxy/oauth2-proxy --reset-then-reuse-values -f values.yaml --install --version <version>
 ```
 
 <!-- LINKS -->

@@ -6,24 +6,25 @@ config:
   # - client-id
   # - client-secret
   # - cookie-secret
-  # Source: https://github.com/oauth2-proxy/manifests/blob/main/helm/oauth2-proxy/templates/deployment.yaml#L182-L198
+  # Source: https://github.com/oauth2-proxy/manifests/blob/e1ab9661f5579dec01c42b8068b9b1c8e728980b/helm/oauth2-proxy/templates/deployment.yaml#L189-L211
   configFile: |
+    code_challenge_method="S256"
+    cookie_domains=[ "<my-host>" ]
     email_domains=[ "example.com" ]
-    upstreams=[ "http://oauth2-proxy-api/" ]
+    footer="-"
     http_address="0.0.0.0:80"
     https_address="0.0.0.0:443"
-    proxy_prefix="/protected/oauth2"
-    cookie_domains=[ "<my-host>" ]
-    code_challenge_method="S256"
-    whitelist_domains=[ "<my-host>", "localhost:5173" ]
-    redirect_url="https://<my-host>/protected/oauth2/callback"
-    oidc_issuer_url="https://<my-host>/auth/realms/directed"
     oidc_extra_audiences=[ "trails_local", "12340123401234012340123401234012" ]
-    skip_jwt_bearer_tokens="true"
+    oidc_issuer_url="https://<my-host>/auth/realms/directed"
     provider="oidc"
-    scope="openid email"
     provider_display_name="DIRECTED project"
+    proxy_prefix="/protected/oauth2"
+    redirect_url="https://<my-host>/protected/oauth2/callback"
+    scope="openid email"
     silence_ping_logging="true"
+    skip_jwt_bearer_tokens="true"
+    upstreams=[ "http://oauth2-proxy-api/" ]
+    whitelist_domains=[ "<my-host>", "localhost:5173" ]
     ## mark paths as API routes to get HTTP Status code 401 instead of redirect to login page
     # api_routes = [
     #   "^/api"

@@ -3,9 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: oauth2-proxy-api-data
 spec:
-  storageClassName: csi-nas
+  accessModes:
+  - ReadWriteOnce
   resources:
     requests:
       storage: 128M
-  accessModes:
-  - ReadWriteMany
+  storageClassName: ssd

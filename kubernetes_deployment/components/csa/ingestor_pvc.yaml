@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: csa-howis-ingestor-data
 spec:
+  storageClassName: csi-nas
   resources:
     requests:
       storage: 500M

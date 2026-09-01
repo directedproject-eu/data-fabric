@@ -50,10 +50,10 @@ spec:
     - metadata:
         name: keycloak-db-data
       spec:
-        storageClassName: csi-nas
+        storageClassName: ssd
         resources:
           requests:
             storage: 1Gi
         volumeMode: Filesystem
         accessModes:
-          - ReadWriteMany
+          - ReadWriteOnce

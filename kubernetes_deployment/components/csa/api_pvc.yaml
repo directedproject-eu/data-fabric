@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: csa-api-storage
 spec:
+  storageClassName: csi-nas
   resources:
     requests:
       storage: 1G

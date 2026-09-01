@@ -21,8 +21,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: keycloak
-        # FIXME version 26.1.3 not working with the requested features in args property
-        image: quay.io/keycloak/keycloak:25.0.6
+        image: quay.io/keycloak/keycloak:26.7.2
         imagePullPolicy: IfNotPresent
         resources:
           requests:
@@ -33,14 +32,14 @@ spec:
             memory: 1024M
         args:
          - start
-         - --features=admin-fine-grained-authz,scripts,hostname:v1
+         - --import-realm
         env:
-        - name: KEYCLOAK_ADMIN
+        - name: KC_BOOTSTRAP_ADMIN_USERNAME
           valueFrom:
             secretKeyRef:
               name: keycloak
               key: keycloak_username
-        - name: KEYCLOAK_ADMIN_PASSWORD
+        - name: KC_BOOTSTRAP_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
               name: keycloak
@@ -55,9 +54,36 @@ spec:
             secretKeyRef:
               name: keycloak
               key: keycloak_db_password
-        envFrom:
-        - configMapRef:
-            name: keycloak
+          #
+          # https://www.keycloak.org/server/all-config#category-cache
+          #
+        - name: KC_CACHE
+          value: local
+          #
+          # https://www.keycloak.org/server/all-config#category-feature
+          #
+        - name: KC_HEALTH_ENABLED
+          value: "true"
+          # https://www.keycloak.org/server/all-config#category-hostname_v2
+        - name: KC_FEATURE_HOSTNAME
+          value: v2
+        - name: KC_HOSTNAME
+          value: <my-host>
+        - name: KC_PROXY_HEADERS
+          value: xforwarded
+        - name: KC_HTTP_ENABLED
+          value: "true"
+          # https://www.keycloak.org/server/all-config#category-database
+        - name: KC_DB
+          value: postgres
+        - name: KC_DB_URL_HOST
+          value: keycloak-db
+        - name: KC_DB_URL_PORT
+          value: "5432"
+        - name: KC_DB_URL_DATABASE
+          value: keycloak-data
+        - name: KC_DB_SCHEMA
+          value: public
         ports:
         - name: http
           containerPort: 8080
@@ -66,9 +92,10 @@ spec:
         #     path: /realms/master
         #     port: 8080
         volumeMounts:
-        - name: storage
-          mountPath: /opt/keycloak/providers
+        - name: realm-to-import-0
+          mountPath: /opt/keycloak/data/import/realm-0.json
+          subPath: realm-0.json
       volumes:
-      - name: storage
-        persistentVolumeClaim:
-          claimName: keycloak-storage
+      - name: realm-to-import-0
+        configMap:
+          name: keycloak-realm

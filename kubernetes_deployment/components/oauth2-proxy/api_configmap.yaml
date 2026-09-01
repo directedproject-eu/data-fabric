@@ -11,8 +11,15 @@ data:
       cors: true
       encoding: utf-8
       gzip: false
-      language: en-US
-      limit: 10
+      language:
+        - en-US
+      limits:
+        default_items: 50
+        max_items: 1000
+        # max_distance_x: 25
+        # max_distance_y: 25
+        # max_distance_units: m
+        on_exceed: throttle
       # manager:
         # connection: /tmp/pygeoapi-process-manager.db
         # name: TinyDB
@@ -24,6 +31,7 @@ data:
       ogc_schemas_location: /schemas.opengis.net
       pretty_print: true
       url: https://<my-host>/protected/
+      admin: false
     logging:
       level: DEBUG
       logfile: /dev/stdout
